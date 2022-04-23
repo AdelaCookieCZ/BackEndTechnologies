@@ -1,0 +1,19 @@
+{% include 'base_books.html' %}
+
+{% block body %}
+    <h4>All books ({{object_list.count}})</h4>
+    {% for book in object_list %}
+        <p>{{book.name}} - rating ({{book.rating}}) - <a href="{% url 'detail_book' book.id %}">detail</a></p>
+    {% endfor %}</br>
+
+    <h4>Best books ({{best_books.count}})</h4>
+    {% for book in best_books %}
+        <p>{{book.name}} - rating ({{book.rating}})</p>
+    {% endfor %}</br>
+
+    <h4>Worst books ({{worst_books.count}})</h4>
+    {% for book in worst_books %}
+        <p>{{book.name}} - rating ({{book.rating}})</p>
+    {% endfor %}</br>
+
+{% endblock body %}
