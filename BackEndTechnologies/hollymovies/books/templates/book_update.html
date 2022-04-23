@@ -1,12 +1,12 @@
-{% extends 'base_book.html' %}
+{% include 'base_books.html' %}
 
 {% block body %}
-    <form:action="{% url 'update_book' object.id %}" method="post">
+    <form action="{% url 'book_update' object.id %}" method="post">
         {% csrf_token %}
         {{ form.as_p}}
         <input type="submit" value="Update book">
     </form>
         <br><br>
-    <a href="{% url 'delete_book' object.pk %}">Delete</a>
+    <a href="{% url 'book_delete' object.pk %}">Delete</a>
 
 {% endblock body %}

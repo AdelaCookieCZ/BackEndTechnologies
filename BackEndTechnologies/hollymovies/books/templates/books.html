@@ -3,17 +3,17 @@
 {% block body %}
     <h4>All books ({{object_list.count}})</h4>
     {% for book in object_list %}
-        <p>{{book.name}} - rating ({{book.rating}}) - <a href="{% url 'detail_book' book.id %}">detail</a></p>
+        <p>{{book.name}} - rating ({{book.rating}}) - <a href="{% url 'book_detail' book.id %}">detail</a> - <a href="{% url 'book_update' book.id %}">update</a></p>
     {% endfor %}</br>
 
     <h4>Best books ({{best_books.count}})</h4>
     {% for book in best_books %}
-        <p>{{book.name}} - rating ({{book.rating}})</p>
+        <p>{{book.name}} - rating ({{book.rating}}) - <a href="{% url 'book_detail' book.id %}">detail</a> - <a href="{% url 'book_update' book.id %}">update</a></p>
     {% endfor %}</br>
 
     <h4>Worst books ({{worst_books.count}})</h4>
     {% for book in worst_books %}
-        <p>{{book.name}} - rating ({{book.rating}})</p>
-    {% endfor %}</br>
+        <p>{{book.name}} - rating ({{book.rating}}) - <a href="{% url 'book_detail' book.id %}">detail</a> - <a href="{% url 'book_update' book.id %}">update</a></p>
+{% endfor %}</br>
 
 {% endblock body %}

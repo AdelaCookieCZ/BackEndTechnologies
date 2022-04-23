@@ -1,0 +1,6 @@
+{% extends 'base_books.html' %}
+{% block body %}
+{% for author in object_list %}
+<p>{{author.name}} age: {{author.age}} - <a href="{% url 'author_detail' author.id %}">detail</a> - <a href="{% url 'author_update' author.id %}">update</a></p>
+{% endfor %}
+{% endblock body %}
