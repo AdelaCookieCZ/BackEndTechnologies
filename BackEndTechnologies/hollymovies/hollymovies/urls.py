@@ -15,9 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.auth.views import LoginView, LogoutView
 
+from movies.views import RegistrationView, ProfileCreateView, ProfileUpdateView
 
 urlpatterns = [
+    path('accounts/profile/create/', ProfileCreateView.as_view(), name='profile_create'),
+    path('accounts/profile/update/<int:pk>/', ProfileUpdateView.as_view(), name='profile_update'),
+    path('accounts/registration/', RegistrationView.as_view(), name='register'),
+    path('accounts/login/', LoginView.as_view(), name='login'),
+    path('accounts/logout/', LogoutView.as_view(), name='logout'),
     path('admin/', admin.site.urls),
     path('', include('movies.urls'), name='movies'),
     path('books/', include('books.urls'), name='books'),  #budou obsahovat urls z movies, ktere jsme si vytvorili

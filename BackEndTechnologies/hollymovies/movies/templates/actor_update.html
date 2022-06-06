@@ -7,6 +7,8 @@
         <input type="submit" value="Update actor">
     </form>
     <br><br>
+    {% if perms.movies.delete_actor %}
     <a href="{% url 'delete_actor' object.pk %}">Delete</a>
+    {% endif %}
 
 {% endblock body %}

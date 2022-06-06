@@ -1,14 +1,19 @@
+from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse_lazy
 from django.views.generic import FormView, CreateView, UpdateView, DeleteView
-from movies.models import Movie, Actor, Director, Contact
+from movies.models import Movie, Actor, Director, Contact, Profile
+from books.models import BaseBook
 from django.views import View
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 
-from movies.forms import ContactForm, MovieForm, ActorForm, DirectorForm
+from movies.forms import ContactForm, MovieForm, ActorForm, DirectorForm, ProfileForm
+
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
+
 
 
 
@@ -18,6 +23,7 @@ class HomepageView(View):
                 'number_of_movies': Movie.objects.all().count(),
                 'number_of_actors': Actor.objects.all().count(),
                 'number_of_directors': Director.objects.all().count(),
+                'number_of_books': BaseBook.objects.all().count(),
                 'page_name': 'Homepage',
             }
         return TemplateResponse(request, 'homepage.html', context=context)
@@ -31,7 +37,7 @@ class HomepageView(View):
 #     }
 #     return TemplateResponse(request, 'homepage.html', context=context) #mame URLs, ktere nam definuje, kam to odkaze uzivatele
 
-class ActorListView(ListView):
+class ActorListView(LoginRequiredMixin, ListView):
     model = Actor
     template_name = 'actors.html'
     extra_context = {'page_name': 'Actors'}
@@ -46,7 +52,7 @@ class ActorListView(ListView):
 #     return TemplateResponse(request, 'actors.html', context=context)
 
 
-class MoviesListView(ListView):
+class MoviesListView(LoginRequiredMixin, ListView):
     queryset = Movie.objects.all().order_by('-rating')
     template_name = 'movies.html'
 
@@ -60,14 +66,14 @@ class MoviesListView(ListView):
         return context
 
 
-class HollyMoviesDetailView(DetailView):
+class HollyMoviesDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(HollyMoviesDetailView, self).get_context_data(**kwargs)
         context.update({'page_name': self.object.name})
         return context
 
 
-class DirectorListView(ListView):
+class DirectorListView(LoginRequiredMixin, ListView):
     model = Director
     template_name = 'directors.html'
     extra_context = {'page_name': 'Directors'}
@@ -78,7 +84,7 @@ class DirectorDetailView(HollyMoviesDetailView):
     template_name = 'director_detail.html'    #mohlo by byt i actor detail, ktery je uplne stejny a nemusi se vytvaret
 
 
-class MovieDetailView(HollyMoviesDetailView):
+class MovieDetailView(UserPassesTestMixin, HollyMoviesDetailView):
     model = Movie
     template_name = 'movie_detail.html'
 
@@ -87,6 +93,11 @@ class MovieDetailView(HollyMoviesDetailView):
         movie.likes += 1
         movie.save(update_fields=['likes', ]) #rikame, ze jsme zmenili jen liky, vse ostatni zustane tak, jak je (rychlejsi)
         return redirect('movie_detail', pk=pk) #redirect = po post requestu se dostaneme zpatky na get a uvidime zmenu automaticky na strance
+
+    def test_func(self):
+        if self.request.user.username == 'honza':       #pro Honzu bude zakazna nahlizet na detail filmu
+            return False
+        return True
 
 
 class ActorDetailView(HollyMoviesDetailView):
@@ -147,7 +158,7 @@ def jinja2_testing_view(request):
 #         return TemplateResponse(request, 'contact.html', context={'contact_form': ContactForm()})
 
 
-class ContactView(FormView):
+class ContactView(LoginRequiredMixin, FormView):
     template_name = 'contact.html'
     form_class = ContactForm
 
@@ -171,55 +182,92 @@ class ContactView(FormView):
         return TemplateResponse(self.request,'contact.html', context={'form': form})
 
 
-class CreateMovieView(CreateView):
+class CreateMovieView(PermissionRequiredMixin,LoginRequiredMixin, CreateView):
     template_name = 'movie_create.html'
     form_class = MovieForm
     model = Movie
+    permission_required = 'movies.add_movie'
 
 
-class CreateActorView(CreateView):
+class CreateActorView(PermissionRequiredMixin, LoginRequiredMixin,CreateView):
     template_name = 'actor_create.html'
     form_class = ActorForm
     model = Actor
+    permission_required = 'movies.add_actor'
 
 
-class UpdateMovieView(UpdateView):
+class UpdateMovieView(LoginRequiredMixin,UpdateView):
     template_name = 'movie_update.html'
     form_class = MovieForm
     model = Movie
 
 
-class UpdateActorView(UpdateView):
+class UpdateActorView(LoginRequiredMixin,UpdateView):
     template_name = 'actor_update.html'
     form_class = ActorForm
     model = Actor
 
 
-class DeleteMovieView(DeleteView):
+class DeleteMovieView(LoginRequiredMixin, DeleteView):
     template_name = 'movie_confirm_delete.html'
     model = Movie
     success_url = reverse_lazy('all_movies')
 
 
-class DeleteActorView(DeleteView):
+class DeleteActorView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     template_name = 'actor_confirm_delete.html'
     model = Actor
     success_url = reverse_lazy('all_actors')
+    permission_required = 'movies.delete_actor'
 
 
-class CreateDirectorView(CreateView):
+class CreateDirectorView(PermissionRequiredMixin, LoginRequiredMixin,CreateView):
     template_name = 'director_create.html'
     form_class = DirectorForm
     model = Director
+    permission_required = 'movies.add_director'
 
 
-class UpdateDirectorView(UpdateView):
+class UpdateDirectorView(LoginRequiredMixin, UpdateView):
     template_name = 'director_update.html'
     form_class = DirectorForm
     model = Director
 
 
-class DeleteDirectorView(DeleteView):
+class DeleteDirectorView(LoginRequiredMixin, DeleteView):
     template_name = 'director_confirm_delete.html'
     model = Director
     success_url = reverse_lazy('all_directors')
+
+
+class RegistrationView(CreateView):
+    form_class = UserCreationForm
+    template_name = 'registration/register.html'
+    success_url = reverse_lazy('login')
+
+
+class ProfileCreateView(CreateView):
+    form_class = ProfileForm
+    template_name = 'registration/profile_create.html'
+    success_url = reverse_lazy('homepage')
+
+    def get_form_kwargs(self):
+        kwargs = super(ProfileCreateView, self).get_form_kwargs()
+        kwargs.update({'request': self.request})
+        return kwargs
+
+
+class ProfileUpdateView(UserPassesTestMixin, LoginRequiredMixin, UpdateView):
+    form_class = ProfileForm
+    template_name = 'registration/profile_update.html'
+    success_url = reverse_lazy('homepage')
+    model = Profile
+
+    def get_form_kwargs(self):
+        kwargs = super(ProfileUpdateView, self).get_form_kwargs()
+        kwargs.update({'request': self.request})
+        return kwargs
+
+    def test_func(self):
+        profile = Profile.objects.get(pk=self.kwargs['pk'])
+        return profile.user == self.request.user

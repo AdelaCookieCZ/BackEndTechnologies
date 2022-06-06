@@ -1,0 +1,10 @@
+{%  include 'homepage.html' %}
+
+{% block body %}
+
+{% for animal in object_list %}
+
+    <p>{{animal.name}} birth: {{animal.date_of_birth}}</p>
+
+{% endfor %}
+{% endblock body %}

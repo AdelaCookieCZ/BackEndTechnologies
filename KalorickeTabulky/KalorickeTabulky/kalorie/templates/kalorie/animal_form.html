@@ -1,0 +1,10 @@
+{% extends 'kalorie/homepage.html' %}
+
+{% block body %}
+    <form action="{% url 'animal_create' %}" method="post">
+        {% csrf_token %}
+        {{ form.as_p}}
+        <input type="submit" value="Vytvorit zvire">
+    </form>
+
+{% endblock body %}
