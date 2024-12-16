@@ -1,3 +1,0 @@
-"# BackEndTechnologies" 
-# Doucko
-# KnihovnaDoucko
